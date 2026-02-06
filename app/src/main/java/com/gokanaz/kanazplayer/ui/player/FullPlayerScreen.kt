@@ -2,6 +2,7 @@ package com.gokanaz.kanazplayer.ui.player
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -47,6 +48,7 @@ fun FullPlayerScreen(
     var showMoreOptions by remember { mutableStateOf(false) }
     var showQueueDialog by remember { mutableStateOf(false) }
     var showSleepTimer by remember { mutableStateOf(false) }
+    var showEqualizerDialog by remember { mutableStateOf(false) }
     
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
@@ -159,7 +161,7 @@ fun FullPlayerScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                IconButton(onClick = {}) {
+                IconButton(onClick = { showEqualizerDialog = true }) {
                     Icon(Icons.Default.GraphicEq, "EQ", tint = Color.White)
                 }
                 IconButton(onClick = { showVolumeControl = true }) {
@@ -204,6 +206,23 @@ fun FullPlayerScreen(
         QueueDialog(
             viewModel = viewModel,
             onDismiss = { showQueueDialog = false }
+        )
+    }
+    
+    if (showSleepTimer) {
+        com.gokanaz.kanazplayer.ui.sleep.SleepTimerDialog(
+            isActive = viewModel.sleepTimerActive.collectAsState().value,
+            remainingTime = viewModel.sleepTimerRemaining.collectAsState().value,
+            onDismiss = { showSleepTimer = false },
+            onSetTimer = { viewModel.setSleepTimer(it); showSleepTimer = false },
+            onCancel = { viewModel.cancelSleepTimer(); showSleepTimer = false }
+        )
+    }
+    
+    if (showEqualizerDialog) {
+        com.gokanaz.kanazplayer.ui.equalizer.EqualizerDialog(
+            viewModel = viewModel,
+            onDismiss = { showEqualizerDialog = false }
         )
     }
 }
