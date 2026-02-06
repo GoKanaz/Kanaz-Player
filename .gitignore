@@ -1,0 +1,79 @@
+# Android build outputs
+.gradle/
+build/
+app/build/
+captures/
+
+# Local configuration
+local.properties
+.bundle/
+
+# System files
+*.swp
+*~
+.DS_Store
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Keystores
+*.jks
+*.keystore
+
+# Logs
+*.log
+logs/
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Gradle cache
+.gradle/caches/
+.gradle/daemon/
+.gradle/wrapper/
+
+# Gradle wrapper
+gradle/wrapper/gradle-wrapper.properties
+
+# Android Studio
+*.hprof
+*.orig
+.settings/
+bin/
+gen/
+out/
+.classpath
+.project
+
+# NDK
+.externalNativeBuild/
+.cxx/
+obj/
+
+# Termux specific
+termux-packages/
+termux-apt-repo/
+*.deb
+*.tar.xz
+/data/data/com.termux/
+
+# Generated files
+.generated/
+.generated_files/
+
+# APKs and install files
+*.apk
+*.ap_
+*.aab
+
+# Annotation processors
+.apt_generated/
+
+# Runtime data
+releases/
+profile/
+tmp/backup_gradle_asli/

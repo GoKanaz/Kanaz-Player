@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<media-descriptions>
+    <media-item>
+        <id>1</id>
+        <title>Sample Music</title>
+        <artist>Kanaz Player</artist>
+        <album>Demo Tracks</album>
+        <duration>180000</duration>
+        <genre>Electronic</genre>
+    </media-item>
+</media-descriptions>
