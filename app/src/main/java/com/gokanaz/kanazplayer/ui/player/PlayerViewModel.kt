@@ -12,7 +12,6 @@ import com.gokanaz.kanazplayer.data.model.Playlist
 import com.gokanaz.kanazplayer.data.model.Song
 import com.gokanaz.kanazplayer.data.repository.*
 import com.gokanaz.kanazplayer.service.MusicPlayerManager
-import com.gokanaz.kanazplayer.service.MusicPlayerService
 import com.gokanaz.kanazplayer.service.SleepTimerManager
 import com.gokanaz.kanazplayer.util.AlbumArtExtractor
 import com.gokanaz.kanazplayer.util.BlurBackgroundHelper
@@ -26,7 +25,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val repository = MusicRepository(application)
     private val playlistRepository = PlaylistRepository(application)
     private val libraryRepository = LibraryRepository(application)
-    private val playerService = MusicPlayerService(application)
     private val context = application
     
     private var bassBoostEffect: BassBoost? = null
@@ -93,23 +91,18 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         startPositionUpdater()
         observeCurrentSong()
         initializeAudioEffects()
-        setupCompletionListener()
-    }
-    
-    private fun setupCompletionListener() {
-        playerService.setOnCompletionListener {
-            playNext()
-        }
     }
     
     private fun initializeAudioEffects() {
         try {
-            val audioSessionId = playerService.getAudioSessionId()
-            bassBoostEffect = BassBoost(0, audioSessionId).apply {
-                enabled = false
-            }
-            virtualizerEffect = Virtualizer(0, audioSessionId).apply {
-                enabled = false
+            val audioSessionId = MusicPlayerManager.getAudioSessionId()
+            if (audioSessionId != 0) {
+                bassBoostEffect = BassBoost(0, audioSessionId).apply {
+                    enabled = false
+                }
+                virtualizerEffect = Virtualizer(0, audioSessionId).apply {
+                    enabled = false
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -134,7 +127,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     
     fun setPlaybackSpeed(speed: Float) {
         _playbackSpeed.value = speed
-        playerService.setPlaybackSpeed(speed)
+        MusicPlayerManager.setPlaybackSpeed(speed)
     }
     
     private fun observeCurrentSong() {
@@ -170,10 +163,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private fun startPositionUpdater() {
         viewModelScope.launch {
             while (true) {
-                if (isPlaying.value) {
-                    _currentPosition.value = playerService.getCurrentPosition()
-                    _duration.value = playerService.getDuration()
-                }
+                _currentPosition.value = MusicPlayerManager.getCurrentPosition()
+                _duration.value = MusicPlayerManager.getDuration()
                 delay(100)
             }
         }
@@ -199,7 +190,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     
     fun playSong(song: Song) {
         _currentSong.value = song
-        playerService.playSong(song)
+        MusicPlayerManager.playSong(context, song)
         loadAlbumArt(song)
         loadLyrics(song)
         updateQueue()
@@ -216,13 +207,23 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (_currentSong.value == null && _songs.value.isNotEmpty()) {
             playSong(_songs.value.first())
         } else {
-            playerService.togglePlayPause()
+            MusicPlayerManager.togglePlayPause(context)
         }
     }
     
     fun seekTo(position: Long) {
-        playerService.seekTo(position)
+        MusicPlayerManager.seekTo(position)
         _currentPosition.value = position
+    }
+    
+    fun skipForward() {
+        val newPosition = (_currentPosition.value + 10000).coerceAtMost(_duration.value)
+        seekTo(newPosition)
+    }
+    
+    fun skipBackward() {
+        val newPosition = (_currentPosition.value - 10000).coerceAtLeast(0)
+        seekTo(newPosition)
     }
     
     fun playNext() {
@@ -296,6 +297,5 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         super.onCleared()
         bassBoostEffect?.release()
         virtualizerEffect?.release()
-        playerService.release()
     }
 }
