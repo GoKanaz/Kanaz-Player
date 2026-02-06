@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -20,9 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.gokanaz.kanazplayer.ui.equalizer.EqualizerDialog
-import com.gokanaz.kanazplayer.ui.queue.QueueDialog
-import com.gokanaz.kanazplayer.ui.sleep.SleepTimerDialog
+import com.gokanaz.kanazplayer.util.TimeFormatter
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,18 +38,13 @@ fun FullPlayerScreen(
     val isRepeatEnabled by viewModel.isRepeatEnabled.collectAsState()
     val albumArt by viewModel.albumArt.collectAsState()
     val queue by viewModel.queue.collectAsState()
-    val sleepTimerActive by viewModel.sleepTimerActive.collectAsState()
-    val sleepTimerRemaining by viewModel.sleepTimerRemaining.collectAsState()
     val lyrics by viewModel.lyrics.collectAsState()
     val playbackSpeed by viewModel.playbackSpeed.collectAsState()
     val backgroundGradient by viewModel.backgroundGradient.collectAsState()
     
-    var showSleepTimer by remember { mutableStateOf(false) }
-    var showEqualizer by remember { mutableStateOf(false) }
-    var showQueue by remember { mutableStateOf(false) }
-    var showMoreOptions by remember { mutableStateOf(false) }
     var showPlaybackSpeed by remember { mutableStateOf(false) }
     var showVolumeControl by remember { mutableStateOf(false) }
+    var showMoreOptions by remember { mutableStateOf(false) }
     
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
@@ -104,13 +98,7 @@ fun FullPlayerScreen(
                 TabRow(
                     selectedTabIndex = pagerState.currentPage,
                     modifier = Modifier.weight(1f),
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.Indicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
                 ) {
                     Tab(
                         selected = pagerState.currentPage == 0,
@@ -163,7 +151,6 @@ fun FullPlayerScreen(
                         isPlaying = isPlaying,
                         isShuffleEnabled = isShuffleEnabled,
                         isRepeatEnabled = isRepeatEnabled,
-                        queue = queue,
                         onSeekTo = { viewModel.seekTo(it) },
                         onTogglePlayPause = { viewModel.togglePlayPause() },
                         onPlayNext = { viewModel.playNext() },
@@ -182,50 +169,28 @@ fun FullPlayerScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { showEqualizer = true }) {
-                    Icon(
-                        Icons.Default.GraphicEq,
-                        contentDescription = "Equalizer",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                IconButton(onClick = { /* Equalizer */ }) {
+                    Icon(Icons.Default.GraphicEq, "Equalizer")
                 }
                 
                 IconButton(onClick = { showVolumeControl = true }) {
-                    Icon(
-                        Icons.Default.VolumeUp,
-                        contentDescription = "Volume",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                    Icon(Icons.Default.VolumeUp, "Volume")
                 }
                 
-                IconButton(onClick = { showSleepTimer = true }) {
-                    Icon(
-                        Icons.Default.Timer,
-                        contentDescription = "Sleep Timer",
-                        tint = if (sleepTimerActive) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurface
-                    )
+                IconButton(onClick = { /* Timer */ }) {
+                    Icon(Icons.Default.Timer, "Timer")
                 }
                 
                 IconButton(onClick = { showPlaybackSpeed = true }) {
-                    Icon(
-                        Icons.Default.Speed,
-                        contentDescription = "Speed",
-                        tint = if (playbackSpeed != 1.0f) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurface
-                    )
+                    Icon(Icons.Default.Speed, "Speed")
                 }
                 
-                IconButton(onClick = { showQueue = true }) {
-                    Icon(
-                        Icons.Default.QueueMusic,
-                        contentDescription = "Queue",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                IconButton(onClick = { /* Queue */ }) {
+                    Icon(Icons.Default.QueueMusic, "Queue")
                 }
             }
             
@@ -233,54 +198,11 @@ fun FullPlayerScreen(
         }
     }
     
-    if (showSleepTimer) {
-        SleepTimerDialog(
-            isActive = sleepTimerActive,
-            remainingTime = sleepTimerRemaining,
-            onDismiss = { showSleepTimer = false },
-            onSetTimer = { minutes ->
-                viewModel.setSleepTimer(minutes)
-                showSleepTimer = false
-            },
-            onCancel = {
-                viewModel.cancelSleepTimer()
-                showSleepTimer = false
-            }
-        )
-    }
-    
-    if (showEqualizer) {
-        EqualizerDialog(
-            viewModel = viewModel,
-            onDismiss = { showEqualizer = false }
-        )
-    }
-    
-    if (showQueue) {
-        QueueDialog(
-            queue = queue,
-            currentSong = currentSong,
-            onDismiss = { showQueue = false },
-            onSongClick = { song ->
-                viewModel.playSong(song)
-                showQueue = false
-            },
-            onRemove = { index ->
-                viewModel.removeFromQueue(index)
-            },
-            onClear = {
-                viewModel.clearQueue()
-            }
-        )
-    }
-    
     if (showMoreOptions) {
         MoreOptionsBottomSheet(
             song = currentSong,
             onDismiss = { showMoreOptions = false },
-            onDeleteConfirm = {
-                onCollapse()
-            }
+            onDeleteConfirm = { onCollapse() }
         )
     }
     
@@ -311,7 +233,6 @@ private fun PlayingPage(
     isPlaying: Boolean,
     isShuffleEnabled: Boolean,
     isRepeatEnabled: Boolean,
-    queue: List<com.gokanaz.kanazplayer.data.model.Song>,
     onSeekTo: (Long) -> Unit,
     onTogglePlayPause: () -> Unit,
     onPlayNext: () -> Unit,
@@ -382,27 +303,15 @@ private fun PlayingPage(
                 val newPosition = (newValue * duration).toLong()
                 onSeekTo(newPosition)
             },
-            modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.primary,
-                activeTrackColor = MaterialTheme.colorScheme.primary
-            )
+            modifier = Modifier.fillMaxWidth()
         )
         
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                formatDuration(currentPosition),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                formatDuration(duration),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Text(TimeFormatter.formatDuration(currentPosition))
+            Text(TimeFormatter.formatDuration(duration))
         }
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -412,117 +321,43 @@ private fun PlayingPage(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onToggleShuffle,
-                modifier = Modifier.size(48.dp)
-            ) {
+            IconButton(onClick = onToggleShuffle) {
                 Icon(
                     Icons.Default.Shuffle,
-                    contentDescription = "Shuffle",
-                    tint = if (isShuffleEnabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    },
-                    modifier = Modifier.size(28.dp)
+                    "Shuffle",
+                    tint = if (isShuffleEnabled) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
             
-            IconButton(
-                onClick = onPlayPrevious,
-                modifier = Modifier.size(64.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SkipPrevious,
-                    contentDescription = "Previous",
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+            IconButton(onClick = onPlayPrevious, modifier = Modifier.size(64.dp)) {
+                Icon(Icons.Default.SkipPrevious, "Previous", modifier = Modifier.size(48.dp))
             }
             
             FilledIconButton(
                 onClick = onTogglePlayPause,
                 modifier = Modifier.size(80.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                shape = CircleShape
             ) {
                 Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    "Play/Pause",
                     modifier = Modifier.size(48.dp)
                 )
             }
             
-            IconButton(
-                onClick = onPlayNext,
-                modifier = Modifier.size(64.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SkipNext,
-                    contentDescription = "Next",
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+            IconButton(onClick = onPlayNext, modifier = Modifier.size(64.dp)) {
+                Icon(Icons.Default.SkipNext, "Next", modifier = Modifier.size(48.dp))
             }
             
-            IconButton(
-                onClick = onToggleRepeat,
-                modifier = Modifier.size(48.dp)
-            ) {
+            IconButton(onClick = onToggleRepeat) {
                 Icon(
                     Icons.Default.Repeat,
-                    contentDescription = "Repeat",
-                    tint = if (isRepeatEnabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    },
-                    modifier = Modifier.size(28.dp)
+                    "Repeat",
+                    tint = if (isRepeatEnabled) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
-            }
-        }
-        
-        Spacer(modifier = Modifier.weight(1f))
-        
-        if (queue.size > 1) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.MusicNote,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Next: ${queue.getOrNull(1)?.title ?: ""}",
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
             }
         }
     }
-}
-
-fun formatDuration(millis: Long): String {
-    val totalSeconds = millis / 1000
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return String.format("%02d:%02d", minutes, seconds)
 }

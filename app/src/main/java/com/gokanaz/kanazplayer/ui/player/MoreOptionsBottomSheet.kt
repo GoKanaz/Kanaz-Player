@@ -1,5 +1,6 @@
 package com.gokanaz.kanazplayer.ui.player
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
@@ -43,14 +44,12 @@ fun MoreOptionsBottomSheet(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
             )
             
-            Divider()
+            HorizontalDivider()
             
             OptionItem(
                 icon = Icons.Default.Edit,
                 title = "Edit Tag",
-                onClick = {
-                    onDismiss()
-                }
+                onClick = { onDismiss() }
             )
             
             OptionItem(
@@ -75,9 +74,7 @@ fun MoreOptionsBottomSheet(
                 icon = Icons.Default.Delete,
                 title = "Hapus File",
                 isDestructive = true,
-                onClick = {
-                    showDeleteDialog = true
-                }
+                onClick = { showDeleteDialog = true }
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -142,19 +139,20 @@ private fun OptionItem(
 
 private fun setAsRingtone(context: Context, song: Song) {
     try {
-        val contentValues = android.content.ContentValues().apply {
-            put(MediaStore.MediaColumns.IS_RINGTONE, true)
+        val values = ContentValues().apply {
+            put(MediaStore.Audio.Media.IS_RINGTONE, true)
+            put(MediaStore.Audio.Media.IS_NOTIFICATION, false)
+            put(MediaStore.Audio.Media.IS_ALARM, false)
+            put(MediaStore.Audio.Media.IS_MUSIC, false)
         }
-        context.contentResolver.update(
-            Uri.parse(song.path),
-            contentValues,
-            null,
-            null
-        )
+        
+        val uri = Uri.parse(song.path)
+        context.contentResolver.update(uri, values, null, null)
+        
         RingtoneManager.setActualDefaultRingtoneUri(
             context,
             RingtoneManager.TYPE_RINGTONE,
-            Uri.parse(song.path)
+            uri
         )
     } catch (e: Exception) {
         e.printStackTrace()
@@ -177,7 +175,9 @@ private fun shareSong(context: Context, song: Song) {
 private fun deleteSongFile(context: Context, song: Song) {
     try {
         val file = File(song.path)
-        file.delete()
+        if (file.exists()) {
+            file.delete()
+        }
         
         context.contentResolver.delete(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
