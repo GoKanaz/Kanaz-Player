@@ -37,7 +37,6 @@ fun FullPlayerScreen(
     val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
     val isRepeatEnabled by viewModel.isRepeatEnabled.collectAsState()
     val albumArt by viewModel.albumArt.collectAsState()
-    val queue by viewModel.queue.collectAsState()
     val lyrics by viewModel.lyrics.collectAsState()
     val playbackSpeed by viewModel.playbackSpeed.collectAsState()
     val backgroundGradient by viewModel.backgroundGradient.collectAsState()
@@ -54,9 +53,7 @@ fun FullPlayerScreen(
             Image(
                 bitmap = albumArt!!.asImageBitmap(),
                 contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(50.dp),
+                modifier = Modifier.fillMaxSize().blur(50.dp),
                 contentScale = ContentScale.Crop
             )
         }
@@ -87,12 +84,7 @@ fun FullPlayerScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onCollapse) {
-                    Icon(
-                        Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Collapse",
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                    Icon(Icons.Default.KeyboardArrowDown, "Collapse", Modifier.size(32.dp))
                 }
                 
                 TabRow(
@@ -103,38 +95,17 @@ fun FullPlayerScreen(
                     Tab(
                         selected = pagerState.currentPage == 0,
                         onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
-                        text = {
-                            Text(
-                                "Memutar",
-                                color = if (pagerState.currentPage == 0)
-                                    MaterialTheme.colorScheme.onSurface
-                                else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
+                        text = { Text("Memutar") }
                     )
                     Tab(
                         selected = pagerState.currentPage == 1,
                         onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
-                        text = {
-                            Text(
-                                "Lirik",
-                                color = if (pagerState.currentPage == 1)
-                                    MaterialTheme.colorScheme.onSurface
-                                else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
+                        text = { Text("Lirik") }
                     )
                 }
                 
                 IconButton(onClick = { showMoreOptions = true }) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "More",
-                        modifier = Modifier.size(28.dp),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                    Icon(Icons.Default.MoreVert, "More", Modifier.size(28.dp))
                 }
             }
             
@@ -169,29 +140,14 @@ fun FullPlayerScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                IconButton(onClick = { /* Equalizer */ }) {
-                    Icon(Icons.Default.GraphicEq, "Equalizer")
-                }
-                
-                IconButton(onClick = { showVolumeControl = true }) {
-                    Icon(Icons.Default.VolumeUp, "Volume")
-                }
-                
-                IconButton(onClick = { /* Timer */ }) {
-                    Icon(Icons.Default.Timer, "Timer")
-                }
-                
-                IconButton(onClick = { showPlaybackSpeed = true }) {
-                    Icon(Icons.Default.Speed, "Speed")
-                }
-                
-                IconButton(onClick = { /* Queue */ }) {
-                    Icon(Icons.Default.QueueMusic, "Queue")
-                }
+                IconButton(onClick = {}) { Icon(Icons.Default.GraphicEq, "EQ") }
+                IconButton(onClick = { showVolumeControl = true }) { Icon(Icons.Default.VolumeUp, "Vol") }
+                IconButton(onClick = {}) { Icon(Icons.Default.Timer, "Timer") }
+                IconButton(onClick = { showPlaybackSpeed = true }) { Icon(Icons.Default.Speed, "Speed") }
+                IconButton(onClick = {}) { Icon(Icons.Default.QueueMusic, "Queue") }
             }
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -210,17 +166,12 @@ fun FullPlayerScreen(
         PlaybackSpeedDialog(
             currentSpeed = playbackSpeed,
             onDismiss = { showPlaybackSpeed = false },
-            onSpeedSelected = { speed ->
-                viewModel.setPlaybackSpeed(speed)
-                showPlaybackSpeed = false
-            }
+            onSpeedSelected = { viewModel.setPlaybackSpeed(it); showPlaybackSpeed = false }
         )
     }
     
     if (showVolumeControl) {
-        VolumeControlDialog(
-            onDismiss = { showVolumeControl = false }
-        )
+        VolumeControlDialog(onDismiss = { showVolumeControl = false })
     }
 }
 
@@ -240,15 +191,11 @@ private fun PlayingPage(
     onToggleShuffle: () -> Unit,
     onToggleRepeat: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        Spacer(Modifier.height(16.dp))
         
         Box(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(16.dp))
@@ -256,107 +203,52 @@ private fun PlayingPage(
             contentAlignment = Alignment.Center
         ) {
             if (albumArt != null) {
-                Image(
-                    bitmap = albumArt.asImageBitmap(),
-                    contentDescription = "Album Art",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                Image(albumArt.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             } else {
-                Icon(
-                    imageVector = Icons.Default.MusicNote,
-                    contentDescription = null,
-                    modifier = Modifier.size(120.dp),
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
+                Icon(Icons.Default.MusicNote, null, Modifier.size(120.dp))
             }
         }
         
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(32.dp))
         
-        Text(
-            text = currentSong?.title ?: "No Song",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = currentSong?.artist ?: "Unknown Artist",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Text(currentSong?.title ?: "No Song", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(4.dp))
+        Text(currentSong?.artist ?: "Unknown", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
         
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        val progress = if (duration > 0) {
-            (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-        } else 0f
+        Spacer(Modifier.height(24.dp))
         
         Slider(
-            value = progress,
-            onValueChange = { newValue ->
-                val newPosition = (newValue * duration).toLong()
-                onSeekTo(newPosition)
-            },
+            value = if (duration > 0) (currentPosition.toFloat() / duration).coerceIn(0f, 1f) else 0f,
+            onValueChange = { onSeekTo((it * duration).toLong()) },
             modifier = Modifier.fillMaxWidth()
         )
         
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
             Text(TimeFormatter.formatDuration(currentPosition))
             Text(TimeFormatter.formatDuration(duration))
         }
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
         
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly, Alignment.CenterVertically) {
             IconButton(onClick = onToggleShuffle) {
-                Icon(
-                    Icons.Default.Shuffle,
-                    "Shuffle",
-                    tint = if (isShuffleEnabled) MaterialTheme.colorScheme.primary
-                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                Icon(Icons.Default.Shuffle, "Shuffle", tint = if (isShuffleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(0.6f))
             }
             
-            IconButton(onClick = onPlayPrevious, modifier = Modifier.size(64.dp)) {
-                Icon(Icons.Default.SkipPrevious, "Previous", modifier = Modifier.size(48.dp))
+            IconButton(onClick = onPlayPrevious, Modifier.size(64.dp)) {
+                Icon(Icons.Default.SkipPrevious, "Prev", Modifier.size(48.dp))
             }
             
-            FilledIconButton(
-                onClick = onTogglePlayPause,
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape
-            ) {
-                Icon(
-                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    "Play/Pause",
-                    modifier = Modifier.size(48.dp)
-                )
+            FilledIconButton(onClick = onTogglePlayPause, Modifier.size(80.dp), shape = CircleShape) {
+                Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, "Play", Modifier.size(48.dp))
             }
             
-            IconButton(onClick = onPlayNext, modifier = Modifier.size(64.dp)) {
-                Icon(Icons.Default.SkipNext, "Next", modifier = Modifier.size(48.dp))
+            IconButton(onClick = onPlayNext, Modifier.size(64.dp)) {
+                Icon(Icons.Default.SkipNext, "Next", Modifier.size(48.dp))
             }
             
             IconButton(onClick = onToggleRepeat) {
-                Icon(
-                    Icons.Default.Repeat,
-                    "Repeat",
-                    tint = if (isRepeatEnabled) MaterialTheme.colorScheme.primary
-                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                Icon(Icons.Default.Repeat, "Repeat", tint = if (isRepeatEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(0.6f))
             }
         }
     }
