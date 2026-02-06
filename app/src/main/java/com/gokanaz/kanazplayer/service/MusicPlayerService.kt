@@ -1,15 +1,11 @@
 package com.gokanaz.kanazplayer.service
 
 import android.content.Context
-import androidx.media3.common.PlaybackParameters
+import android.media.MediaPlayer
 import com.gokanaz.kanazplayer.data.model.Song
-import kotlinx.coroutines.flow.StateFlow
 
 class MusicPlayerService(private val context: Context) {
-    
-    private val player = MusicPlayerManager.getPlayer(context)
-    
-    val isPlaying: StateFlow<Boolean> = MusicPlayerManager.isPlaying
+    private var onCompletionListener: (() -> Unit)? = null
     
     fun playSong(song: Song) {
         MusicPlayerManager.playSong(context, song)
@@ -20,26 +16,27 @@ class MusicPlayerService(private val context: Context) {
     }
     
     fun seekTo(position: Long) {
-        MusicPlayerManager.seekTo(context, position)
+        MusicPlayerManager.seekTo(position)
     }
     
     fun getCurrentPosition(): Long {
-        return MusicPlayerManager.getCurrentPosition(context)
+        return MusicPlayerManager.getCurrentPosition()
     }
     
     fun getDuration(): Long {
-        return MusicPlayerManager.getDuration(context)
-    }
-    
-    fun getAudioSessionId(): Int {
-        return player.audioSessionId
+        return MusicPlayerManager.getDuration()
     }
     
     fun setPlaybackSpeed(speed: Float) {
-        player.playbackParameters = PlaybackParameters(speed)
+        MusicPlayerManager.setPlaybackSpeed(speed)
+    }
+    
+    fun getAudioSessionId(): Int {
+        return MusicPlayerManager.getAudioSessionId()
     }
     
     fun setOnCompletionListener(listener: () -> Unit) {
+        onCompletionListener = listener
     }
     
     fun release() {

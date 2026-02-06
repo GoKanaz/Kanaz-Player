@@ -36,6 +36,9 @@ object MusicPlayerManager {
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
                 exoPlayer?.volume = 1.0f
+                if (_isPlaying.value) {
+                    exoPlayer?.play()
+                }
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 exoPlayer?.pause()
@@ -45,6 +48,7 @@ object MusicPlayerManager {
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
                 exoPlayer?.pause()
+                abandonAudioFocus()
             }
         }
     }
@@ -74,6 +78,7 @@ object MusicPlayerManager {
                             }
                         }
                     })
+                    volume = 1.0f
                 }
         }
         return exoPlayer!!
@@ -91,6 +96,7 @@ object MusicPlayerManager {
             audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                 .setAudioAttributes(audioAttributes)
                 .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .setAcceptsDelayedFocusGain(true)
                 .build()
             
             audioManager?.requestAudioFocus(audioFocusRequest!!) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
@@ -101,6 +107,15 @@ object MusicPlayerManager {
                 AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN
             ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+    }
+    
+    private fun abandonAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let { audioManager?.abandonAudioFocusRequest(it) }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager?.abandonAudioFocus(audioFocusChangeListener)
         }
     }
     
@@ -120,10 +135,11 @@ object MusicPlayerManager {
                     .setMediaMetadata(mediaMetadata)
                     .build()
                 
+                player.stop()
+                player.clearMediaItems()
                 player.setMediaItem(mediaItem)
                 player.prepare()
                 player.playWhenReady = true
-                player.play()
                 
                 _currentSong.value = song
                 _duration.value = song.duration
@@ -148,31 +164,45 @@ object MusicPlayerManager {
         }
     }
     
-    fun seekTo(context: Context, position: Long) {
+    fun pause() {
+        exoPlayer?.pause()
+        _isPlaying.value = false
+    }
+    
+    fun play(context: Context) {
+        if (requestAudioFocus(context)) {
+            exoPlayer?.play()
+            _isPlaying.value = true
+        }
+    }
+    
+    fun seekTo(position: Long) {
         exoPlayer?.seekTo(position)
         _currentPosition.value = position
     }
     
-    fun getCurrentPosition(context: Context): Long {
+    fun getCurrentPosition(): Long {
         return exoPlayer?.currentPosition ?: 0L
     }
     
-    fun getDuration(context: Context): Long {
+    fun getDuration(): Long {
         val duration = exoPlayer?.duration ?: 0L
         return if (duration > 0) duration else 0
     }
     
+    fun setPlaybackSpeed(speed: Float) {
+        exoPlayer?.setPlaybackSpeed(speed)
+    }
+    
+    fun getAudioSessionId(): Int {
+        return exoPlayer?.audioSessionId ?: 0
+    }
+    
     fun release() {
+        exoPlayer?.stop()
         exoPlayer?.release()
         exoPlayer = null
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            audioFocusRequest?.let { audioManager?.abandonAudioFocusRequest(it) }
-        } else {
-            @Suppress("DEPRECATION")
-            audioManager?.abandonAudioFocus(audioFocusChangeListener)
-        }
-        
+        abandonAudioFocus()
         _isPlaying.value = false
     }
 }
