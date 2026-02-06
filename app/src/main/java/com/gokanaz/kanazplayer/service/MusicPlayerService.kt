@@ -1,99 +1,48 @@
 package com.gokanaz.kanazplayer.service
 
 import android.content.Context
-import android.media.MediaPlayer
+import androidx.media3.common.PlaybackParameters
 import com.gokanaz.kanazplayer.data.model.Song
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class MusicPlayerService(private val context: Context) {
-    private var mediaPlayer: MediaPlayer? = null
-    private var onCompletionListener: (() -> Unit)? = null
     
-    private val _isPlaying = MutableStateFlow(false)
-    val isPlaying: StateFlow<Boolean> = _isPlaying
+    private val player = MusicPlayerManager.getPlayer(context)
     
-    fun setOnCompletionListener(listener: () -> Unit) {
-        onCompletionListener = listener
-    }
+    val isPlaying: StateFlow<Boolean> = MusicPlayerManager.isPlaying
     
     fun playSong(song: Song) {
-        try {
-            mediaPlayer?.release()
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(song.path)
-                prepare()
-                start()
-                setOnCompletionListener {
-                    _isPlaying.value = false
-                    onCompletionListener?.invoke()
-                }
-            }
-            _isPlaying.value = true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            _isPlaying.value = false
-        }
+        MusicPlayerManager.playSong(context, song)
     }
     
     fun togglePlayPause() {
-        mediaPlayer?.let {
-            try {
-                if (it.isPlaying) {
-                    it.pause()
-                    _isPlaying.value = false
-                } else {
-                    it.start()
-                    _isPlaying.value = true
-                }
-            } catch (e: IllegalStateException) {
-                e.printStackTrace()
-                _isPlaying.value = false
-            }
-        }
+        MusicPlayerManager.togglePlayPause(context)
     }
     
     fun seekTo(position: Long) {
-        mediaPlayer?.let {
-            try {
-                it.seekTo(position.toInt())
-            } catch (e: IllegalStateException) {
-                e.printStackTrace()
-            }
-        }
+        MusicPlayerManager.seekTo(context, position)
     }
     
     fun getCurrentPosition(): Long {
-        return try {
-            mediaPlayer?.currentPosition?.toLong() ?: 0L
-        } catch (e: IllegalStateException) {
-            0L
-        }
+        return MusicPlayerManager.getCurrentPosition(context)
     }
     
     fun getDuration(): Long {
-        return try {
-            mediaPlayer?.duration?.toLong() ?: 0L
-        } catch (e: IllegalStateException) {
-            0L
-        }
+        return MusicPlayerManager.getDuration(context)
     }
     
     fun getAudioSessionId(): Int {
-        return try {
-            mediaPlayer?.audioSessionId ?: 0
-        } catch (e: IllegalStateException) {
-            0
-        }
+        return player.audioSessionId
+    }
+    
+    fun setPlaybackSpeed(speed: Float) {
+        player.playbackParameters = PlaybackParameters(speed)
+    }
+    
+    fun setOnCompletionListener(listener: () -> Unit) {
     }
     
     fun release() {
-        try {
-            mediaPlayer?.release()
-            mediaPlayer = null
-            _isPlaying.value = false
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        MusicPlayerManager.release()
     }
 }

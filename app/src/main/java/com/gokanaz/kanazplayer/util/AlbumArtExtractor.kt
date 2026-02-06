@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import androidx.palette.graphics.Palette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -28,7 +29,19 @@ object AlbumArtExtractor {
     }
     
     fun getDefaultAlbumArt(): Bitmap? {
-        // Return null, will use icon instead
         return null
+    }
+    
+    suspend fun getDominantColor(bitmap: Bitmap?): Int = withContext(Dispatchers.IO) {
+        if (bitmap == null) return@withContext 0xFF1C1C1E.toInt()
+        
+        try {
+            val palette = Palette.from(bitmap).generate()
+            palette.getDarkVibrantColor(
+                palette.getDarkMutedColor(0xFF1C1C1E.toInt())
+            )
+        } catch (e: Exception) {
+            0xFF1C1C1E.toInt()
+        }
     }
 }

@@ -4,14 +4,19 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Virtualizer
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.gokanaz.kanazplayer.data.model.LyricLine
 import com.gokanaz.kanazplayer.data.model.Playlist
 import com.gokanaz.kanazplayer.data.model.Song
 import com.gokanaz.kanazplayer.data.repository.*
 import com.gokanaz.kanazplayer.service.MusicPlayerManager
 import com.gokanaz.kanazplayer.service.MusicPlayerService
 import com.gokanaz.kanazplayer.service.SleepTimerManager
+import com.gokanaz.kanazplayer.util.AlbumArtExtractor
+import com.gokanaz.kanazplayer.util.BlurBackgroundHelper
+import com.gokanaz.kanazplayer.util.LrcParser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,6 +64,20 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     
     private val _virtualizerStrength = MutableStateFlow(0)
     val virtualizerStrength: StateFlow<Int> = _virtualizerStrength
+    
+    private val _playbackSpeed = MutableStateFlow(1.0f)
+    val playbackSpeed: StateFlow<Float> = _playbackSpeed
+    
+    private val _lyrics = MutableStateFlow<List<LyricLine>>(emptyList())
+    val lyrics: StateFlow<List<LyricLine>> = _lyrics
+    
+    private val _dominantColor = MutableStateFlow<Color>(Color(0xFF1C1C1E))
+    val dominantColor: StateFlow<Color> = _dominantColor
+    
+    private val _backgroundGradient = MutableStateFlow<Pair<Color, Color>>(
+        Pair(Color(0xFF1C1C1E), Color(0xFF000000))
+    )
+    val backgroundGradient: StateFlow<Pair<Color, Color>> = _backgroundGradient
     
     val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists
     val folders: StateFlow<List<MusicFolder>> = libraryRepository.folders
@@ -113,18 +132,38 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         virtualizerEffect?.setStrength(strength.toShort())
     }
     
+    fun setPlaybackSpeed(speed: Float) {
+        _playbackSpeed.value = speed
+        playerService.setPlaybackSpeed(speed)
+    }
+    
     private fun observeCurrentSong() {
         viewModelScope.launch {
             MusicPlayerManager.currentSong.collect { song ->
                 _currentSong.value = song
-                song?.let { loadAlbumArt(it) }
+                song?.let { 
+                    loadAlbumArt(it)
+                    loadLyrics(it)
+                }
             }
         }
     }
     
     private fun loadAlbumArt(song: Song) {
         viewModelScope.launch {
-            _albumArt.value = repository.getAlbumArt(song)
+            val art = repository.getAlbumArt(song)
+            _albumArt.value = art
+            
+            val color = AlbumArtExtractor.getDominantColor(art)
+            _dominantColor.value = Color(color)
+            _backgroundGradient.value = BlurBackgroundHelper.getGradientColors(color)
+        }
+    }
+    
+    private fun loadLyrics(song: Song) {
+        viewModelScope.launch {
+            val lrcPath = song.lrcPath ?: LrcParser.findLrcFile(song.path)
+            _lyrics.value = LrcParser.parseLrcFile(lrcPath)
         }
     }
     
@@ -162,6 +201,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         _currentSong.value = song
         playerService.playSong(song)
         loadAlbumArt(song)
+        loadLyrics(song)
         updateQueue()
     }
     

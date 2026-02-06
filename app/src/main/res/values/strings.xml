@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Kanaz Player</string>
+    <string name="tab_playing">Memutar</string>
+    <string name="tab_lyrics">Lirik</string>
+    <string name="no_lyrics">Lirik tidak tersedia</string>
+    <string name="playback_speed">Kecepatan Putar</string>
+    <string name="volume_control">Volume</string>
+    <string name="more_options">Opsi Lainnya</string>
+    <string name="edit_tags">Edit Tag</string>
+    <string name="set_ringtone">Jadikan Nada Dering</string>
+    <string name="delete_file">Hapus File</string>
+    <string name="share_song">Bagikan Lagu</string>
 </resources>

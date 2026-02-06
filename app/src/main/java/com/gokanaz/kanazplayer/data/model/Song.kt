@@ -10,5 +10,6 @@ data class Song(
     val duration: Long,
     val path: String,
     val albumArtUri: String? = null,
-    var albumArtBitmap: Bitmap? = null
+    var albumArtBitmap: Bitmap? = null,
+    val lrcPath: String? = null
 )

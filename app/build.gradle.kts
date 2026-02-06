@@ -91,3 +91,7 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 }
+
+dependencies {
+    implementation("androidx.palette:palette-ktx:1.0.0")
+}
