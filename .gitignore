@@ -31,13 +31,9 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Gradle cache
+# Gradle cache (TAPI JANGAN GRADLE WRAPPER!)
 .gradle/caches/
 .gradle/daemon/
-.gradle/wrapper/
-
-# Gradle wrapper
-gradle/wrapper/gradle-wrapper.properties
 
 # Android Studio
 *.hprof
@@ -59,7 +55,6 @@ termux-packages/
 termux-apt-repo/
 *.deb
 *.tar.xz
-/data/data/com.termux/
 
 # Generated files
 .generated/
@@ -76,4 +71,5 @@ termux-apt-repo/
 # Runtime data
 releases/
 profile/
-tmp/backup_gradle_asli/
+tmp/
+backup_gradle_asli/
