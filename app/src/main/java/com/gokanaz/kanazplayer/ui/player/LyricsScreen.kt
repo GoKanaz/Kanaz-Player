@@ -33,7 +33,11 @@ fun LyricsScreen(
     val scope = rememberCoroutineScope()
     
     val currentLineIndex = remember(currentPosition, lyrics) {
-        lyrics.indexOfLast { it.timestamp <= currentPosition }.coerceAtLeast(0)
+        if (lyrics.isEmpty()) {
+            -1
+        } else {
+            lyrics.indexOfLast { line -> line.timeInMillis <= currentPosition }.coerceAtLeast(0)
+        }
     }
     
     LaunchedEffect(currentLineIndex) {
@@ -115,7 +119,7 @@ fun LyricsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onSeekTo(lyric.timestamp) }
+                            .clickable { onSeekTo(lyric.timeInMillis) }
                             .padding(vertical = 8.dp, horizontal = 16.dp)
                             .then(
                                 if (isActive) {
@@ -129,7 +133,7 @@ fun LyricsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = TimeFormatter.formatDuration(lyric.timestamp),
+                            text = TimeFormatter.formatDuration(lyric.timeInMillis),
                             color = if (isActive) Color.White else Color.White.copy(alpha = 0.5f),
                             fontSize = 12.sp,
                             modifier = Modifier.width(50.dp)
