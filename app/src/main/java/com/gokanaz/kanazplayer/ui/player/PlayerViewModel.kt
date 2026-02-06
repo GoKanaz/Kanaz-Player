@@ -85,7 +85,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val artists: StateFlow<List<Artist>> = libraryRepository.artists
     val genres: StateFlow<List<Genre>> = libraryRepository.genres
     
-    val isPlaying: StateFlow<Boolean> = playerService.isPlaying
+    val isPlaying: StateFlow<Boolean> = MusicPlayerManager.isPlaying
     val sleepTimerActive: StateFlow<Boolean> = SleepTimerManager.isActive
     val sleepTimerRemaining: StateFlow<Long> = SleepTimerManager.remainingTime
     

@@ -67,6 +67,12 @@ object MusicPlayerManager {
                         override fun onIsPlayingChanged(playing: Boolean) {
                             _isPlaying.value = playing
                         }
+                        
+                        override fun onPlaybackStateChanged(playbackState: Int) {
+                            if (playbackState == Player.STATE_READY) {
+                                _duration.value = duration
+                            }
+                        }
                     })
                 }
         }
@@ -117,8 +123,11 @@ object MusicPlayerManager {
                 player.setMediaItem(mediaItem)
                 player.prepare()
                 player.playWhenReady = true
+                player.play()
+                
                 _currentSong.value = song
                 _duration.value = song.duration
+                _isPlaying.value = true
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -127,11 +136,13 @@ object MusicPlayerManager {
     
     fun togglePlayPause(context: Context) {
         exoPlayer?.let { player ->
-            if (player.playWhenReady) {
-                player.playWhenReady = false
+            if (player.isPlaying) {
+                player.pause()
+                _isPlaying.value = false
             } else {
                 if (requestAudioFocus(context)) {
-                    player.playWhenReady = true
+                    player.play()
+                    _isPlaying.value = true
                 }
             }
         }
